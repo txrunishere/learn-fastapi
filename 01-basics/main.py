@@ -1,5 +1,6 @@
 import uvicorn
-from fastapi import FastAPI, Query, Path, Body
+from fastapi import FastAPI, Query, Path, Body, Cookie, Header
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from typing import Annotated, Optional
 
@@ -39,9 +40,7 @@ async def read_user_item(item_id: Annotated[int, Path(title="The ID of the item"
 
 @app.post("/items")
 def create_item(item: Item):
-    if item.name == "iphone":
-        print(item.model_dump())
-
+    print(jsonable_encoder(item))
     return item
 
 
@@ -56,6 +55,21 @@ async def update_item(
 ):
     results = {"item_id": item_id, "item": item, "user": user, "importance": importance}
     return results
+
+# @app.post("/session")
+# async def session_token(access_token: str | None = Cookie(default=None)):
+#     return {"access_token": access_token}
+
+@app.post("/session")
+async def session_token(access_token: Annotated[str | None, Cookie()] = None):
+    return {"access_token": access_token}
+
+@app.get("/get-headers")
+async def get_headers(cookie: Annotated[str, Header()]):
+    print(cookie)
+    print(f"typeof cookie is {type(cookie)}")
+    return cookie
+
 
 if __name__ == "__main__":
     uvicorn.run(app="main:app", port=8080, reload=True)
